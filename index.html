@@ -1,0 +1,935 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ScreenSnap • Material Design 3 Capture Engine</title>
+    <!-- Favicon Icon matching header camera -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='12' fill='%234f378b'/%3E%3Cg transform='translate(8, 8)' fill='%23eaddff'%3E%3Cpath d='M4 21q-.825 0-1.412-.587Q2 19.825 2 19V7q0-.825.588-1.412Q3.175 5 4 5h3.15L9 3h6l1.85 2H20q.825 0 1.413.588Q22 6.175 22 7v12q0 .825-.587 1.413Q20.825 21 20 21Zm0-2h16V7h-4.05l-1.825-2h-4.25L8.05 7H4v12Zm8-1q2.075 0 3.538-1.462Q17 15.075 17 13q0-2.075-1.462-3.538Q14.075 8 12 8Q9.925 8 8.463 9.462Q7 10.925 7 13q0 2.075 1.463 3.538Q9.925 18 12 18Zm0-2q-1.25 0-2.125-.875T9 13q0-1.25.875-2.125T12 10q1.25 0 2.125.875T15 13q0 1.25-.875 2.125T12 16Z'/%3E%3C/g%3E%3C/svg%3E">
+    <!-- Google Fonts: Roboto & Roboto Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Google Material Symbols Outlined -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Roboto', 'sans-serif'],
+              mono: ['Roboto Mono', 'monospace'],
+            },
+            colors: {
+              md: {
+                'surface': '#141218',
+                'surface-dim': '#141218',
+                'surface-bright': '#3b383e',
+                'surface-container-lowest': '#0f0d13',
+                'surface-container-low': '#1d1b20',
+                'surface-container': '#211f26',
+                'surface-container-high': '#2b2930',
+                'surface-container-highest': '#36343b',
+                'on-surface': '#e6e0e9',
+                'on-surface-variant': '#cac4d0',
+                'outline': '#938f99',
+                'outline-variant': '#49454f',
+                'primary': '#d0bcff',
+                'on-primary': '#381e72',
+                'primary-container': '#4f378b',
+                'on-primary-container': '#eaddff',
+                'secondary': '#ccc2dc',
+                'on-secondary': '#332d41',
+                'secondary-container': '#4a4458',
+                'on-secondary-container': '#e8def8',
+                'tertiary': '#efb8c8',
+                'on-tertiary': '#492532',
+                'tertiary-container': '#633b48',
+                'on-tertiary-container': '#ffd8e4',
+                'error': '#f2b8b5',
+                'on-error': '#601410',
+                'error-container': '#8c1d18',
+                'on-error-container': '#f9dedc',
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        vertical-align: middle;
+      }
+      .material-symbols-outlined.fill-1 {
+        font-variation-settings: 'FILL' 1;
+      }
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #141218;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #36343b;
+        border-radius: 9999px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #49454f;
+      }
+      .bg-transparency-grid {
+        background-color: #1a181e;
+        background-image: 
+          linear-gradient(45deg, #141218 25%, transparent 25%), 
+          linear-gradient(-45deg, #141218 25%, transparent 25%), 
+          linear-gradient(45deg, transparent 75%, #141218 75%), 
+          linear-gradient(-45deg, transparent 75%, #141218 75%);
+        background-size: 16px 16px;
+        background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+      }
+    </style>
+  </head>
+  <body class="bg-md-surface text-md-on-surface min-h-screen flex flex-col font-sans selection:bg-md-primary-container selection:text-md-on-primary-container">
+
+    <!-- MD3 Top App Bar -->
+    <header class="sticky top-0 z-40 bg-md-surface-container/90 backdrop-blur-md border-b border-md-outline-variant/30">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-md-primary-container text-md-on-primary-container flex items-center justify-center shadow-sm">
+            <span class="material-symbols-outlined text-[24px]">photo_camera</span>
+          </div>
+          <div>
+            <h1 class="font-bold text-base tracking-tight text-md-on-surface">ScreenSnap</h1>
+            <p class="text-xs text-md-on-surface-variant">High-fidelity headless website rasterization</p>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-3">
+          <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-md-surface-container-high text-xs text-md-on-surface-variant border border-md-outline-variant/40">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span class="font-mono text-[11px]">Headless V8 Engine</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 flex-1 grid lg:grid-cols-12 gap-6">
+      
+      <!-- Controls Panel (5 Columns) -->
+      <div class="lg:col-span-5 space-y-5">
+
+        <!-- Card: Target URL -->
+        <section class="bg-md-surface-container-low border border-md-outline-variant/30 rounded-3xl p-5 shadow-sm space-y-4">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-bold uppercase tracking-wider text-md-on-surface-variant flex items-center gap-2">
+              <span class="material-symbols-outlined text-[18px] text-md-primary">link</span>
+              Target Webpage
+            </label>
+            <span class="text-[11px] text-md-on-surface-variant">HTTP/HTTPS</span>
+          </div>
+
+          <div class="relative">
+            <input 
+              type="text" 
+              id="target-url" 
+              value="https://stripe.com" 
+              placeholder="https://example.com"
+              class="w-full bg-md-surface-container-lowest border border-md-outline-variant/60 rounded-2xl pl-11 pr-4 py-3 text-sm text-md-on-surface placeholder:text-md-outline focus:outline-none focus:border-md-primary focus:ring-1 focus:ring-md-primary transition font-mono"
+            >
+            <span class="material-symbols-outlined absolute left-3.5 top-3.5 text-md-outline text-[20px]">globe</span>
+          </div>
+
+          <!-- URL Assist Chips -->
+          <div>
+            <span class="text-[11px] text-md-on-surface-variant block mb-2 font-medium">Quick Presets</span>
+            <div class="flex flex-wrap gap-1.5">
+              <button type="button" onclick="setTargetUrl('https://stripe.com')" class="text-xs px-3 py-1.5 rounded-full bg-md-surface-container-high hover:bg-md-surface-container-highest text-md-on-surface transition border border-md-outline-variant/30 flex items-center gap-1">Stripe</button>
+              <button type="button" onclick="setTargetUrl('https://apple.com')" class="text-xs px-3 py-1.5 rounded-full bg-md-surface-container-high hover:bg-md-surface-container-highest text-md-on-surface transition border border-md-outline-variant/30 flex items-center gap-1">Apple</button>
+              <button type="button" onclick="setTargetUrl('https://github.com')" class="text-xs px-3 py-1.5 rounded-full bg-md-surface-container-high hover:bg-md-surface-container-highest text-md-on-surface transition border border-md-outline-variant/30 flex items-center gap-1">GitHub</button>
+              <button type="button" onclick="setTargetUrl('https://vercel.com')" class="text-xs px-3 py-1.5 rounded-full bg-md-surface-container-high hover:bg-md-surface-container-highest text-md-on-surface transition border border-md-outline-variant/30 flex items-center gap-1">Vercel</button>
+              <button type="button" onclick="setTargetUrl('https://linear.app')" class="text-xs px-3 py-1.5 rounded-full bg-md-surface-container-high hover:bg-md-surface-container-highest text-md-on-surface transition border border-md-outline-variant/30 flex items-center gap-1">Linear</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Card: Resolution & Viewport Engine -->
+        <section class="bg-md-surface-container-low border border-md-outline-variant/30 rounded-3xl p-5 shadow-sm space-y-4">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-bold uppercase tracking-wider text-md-on-surface-variant flex items-center gap-2">
+              <span class="material-symbols-outlined text-[18px] text-md-primary">aspect_ratio</span>
+              Resolution & Viewport
+            </label>
+            <span id="active-res-badge" class="text-xs font-mono font-medium px-2 py-0.5 rounded-lg bg-md-primary-container text-md-on-primary-container">1920 × 1080</span>
+          </div>
+
+          <!-- Resolution Preset Chips (Including HD and Ultra Wide) -->
+          <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
+            <button type="button" onclick="applyPreset('desktop-1080', 1920, 1080, false, this)" class="res-preset-btn active px-2.5 py-2 rounded-2xl text-left border border-md-primary bg-md-primary-container text-md-on-primary-container transition flex flex-col justify-between">
+              <span class="text-xs font-bold truncate">1080p FHD</span>
+              <span class="text-[10px] opacity-75 font-mono">1920×1080</span>
+            </button>
+            <button type="button" onclick="applyPreset('desktop-720', 1280, 720, false, this)" class="res-preset-btn px-2.5 py-2 rounded-2xl text-left border border-md-outline-variant/40 bg-md-surface-container text-md-on-surface hover:bg-md-surface-container-high transition flex flex-col justify-between">
+              <span class="text-xs font-bold truncate">720p HD</span>
+              <span class="text-[10px] text-md-on-surface-variant font-mono">1280×720</span>
+            </button>
+            <button type="button" onclick="applyPreset('desktop-4k', 3840, 2160, false, this)" class="res-preset-btn px-2.5 py-2 rounded-2xl text-left border border-md-outline-variant/40 bg-md-surface-container text-md-on-surface hover:bg-md-surface-container-high transition flex flex-col justify-between">
+              <span class="text-xs font-bold truncate">4K UHD</span>
+              <span class="text-[10px] text-md-on-surface-variant font-mono">3840×2160</span>
+            </button>
+            <button type="button" onclick="applyPreset('ultrawide', 2560, 1080, false, this)" class="res-preset-btn px-2.5 py-2 rounded-2xl text-left border border-md-outline-variant/40 bg-md-surface-container text-md-on-surface hover:bg-md-surface-container-high transition flex flex-col justify-between">
+              <span class="text-xs font-bold truncate">Ultra Wide</span>
+              <span class="text-[10px] text-md-on-surface-variant font-mono">2560×1080</span>
+            </button>
+            <button type="button" onclick="applyPreset('macbook', 2560, 1600, false, this)" class="res-preset-btn px-2.5 py-2 rounded-2xl text-left border border-md-outline-variant/40 bg-md-surface-container text-md-on-surface hover:bg-md-surface-container-high transition flex flex-col justify-between">
+              <span class="text-xs font-bold truncate">MacBook 16</span>
+              <span class="text-[10px] text-md-on-surface-variant font-mono">2560×1600</span>
+            </button>
+            <button type="button" onclick="applyPreset('iphone-pro', 393, 852, false, this, true)" class="res-preset-btn px-2.5 py-2 rounded-2xl text-left border border-md-outline-variant/40 bg-md-surface-container text-md-on-surface hover:bg-md-surface-container-high transition flex flex-col justify-between">
+              <span class="text-xs font-bold truncate">iPhone 15</span>
+              <span class="text-[10px] text-md-on-surface-variant font-mono">393×852</span>
+            </button>
+            <button type="button" onclick="applyPreset('ipad-pro', 1024, 768, false, this, true)" class="res-preset-btn px-2.5 py-2 rounded-2xl text-left border border-md-outline-variant/40 bg-md-surface-container text-md-on-surface hover:bg-md-surface-container-high transition flex flex-col justify-between">
+              <span class="text-xs font-bold truncate">iPad 4:3</span>
+              <span class="text-[10px] text-md-on-surface-variant font-mono">1024×768</span>
+            </button>
+            <button type="button" onclick="applyPreset('square', 1080, 1080, false, this)" class="res-preset-btn px-2.5 py-2 rounded-2xl text-left border border-md-outline-variant/40 bg-md-surface-container text-md-on-surface hover:bg-md-surface-container-high transition flex flex-col justify-between">
+              <span class="text-xs font-bold truncate">Square 1:1</span>
+              <span class="text-[10px] text-md-on-surface-variant font-mono">1080×1080</span>
+            </button>
+            <button type="button" onclick="applyPreset('social-banner', 1500, 500, false, this)" class="res-preset-btn px-2.5 py-2 rounded-2xl text-left border border-md-outline-variant/40 bg-md-surface-container text-md-on-surface hover:bg-md-surface-container-high transition flex flex-col justify-between">
+              <span class="text-xs font-bold truncate">X Banner</span>
+              <span class="text-[10px] text-md-on-surface-variant font-mono">1500×500</span>
+            </button>
+            <button type="button" onclick="applyPreset('full-page', 1440, 0, true, this)" class="res-preset-btn px-2.5 py-2 rounded-2xl text-left border border-md-outline-variant/40 bg-md-surface-container text-md-on-surface hover:bg-md-surface-container-high transition flex flex-col justify-between">
+              <span class="text-xs font-bold truncate">Full Page</span>
+              <span class="text-[10px] text-md-on-surface-variant font-mono">Auto Height</span>
+            </button>
+          </div>
+
+          <!-- Custom Resolution Inputs -->
+          <div class="bg-md-surface-container p-4 rounded-2xl border border-md-outline-variant/20 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-medium text-md-on-surface flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-[16px] text-md-tertiary">tune</span>
+                Custom Dimensions
+              </span>
+              <label class="flex items-center gap-1.5 cursor-pointer text-xs text-md-on-surface-variant select-none">
+                <input type="checkbox" id="lock-aspect" checked class="w-3.5 h-3.5 rounded bg-md-surface-container-lowest border-md-outline accent-md-primary">
+                <span>Lock Ratio</span>
+              </label>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 items-center">
+              <div>
+                <span class="text-[10px] text-md-on-surface-variant block mb-1 font-mono uppercase">Width (px)</span>
+                <div class="relative">
+                  <input 
+                    type="number" 
+                    id="custom-width" 
+                    value="1920" 
+                    min="320" 
+                    max="7680" 
+                    step="10" 
+                    oninput="handleCustomDimensionChange('width')"
+                    class="w-full bg-md-surface-container-lowest border border-md-outline-variant/50 rounded-xl px-3 py-2 text-sm text-md-on-surface font-mono focus:outline-none focus:border-md-primary"
+                  >
+                </div>
+              </div>
+
+              <div>
+                <span class="text-[10px] text-md-on-surface-variant block mb-1 font-mono uppercase">Height (px)</span>
+                <div class="relative">
+                  <input 
+                    type="number" 
+                    id="custom-height" 
+                    value="1080" 
+                    min="320" 
+                    max="7680" 
+                    step="10" 
+                    oninput="handleCustomDimensionChange('height')"
+                    class="w-full bg-md-surface-container-lowest border border-md-outline-variant/50 rounded-xl px-3 py-2 text-sm text-md-on-surface font-mono focus:outline-none focus:border-md-primary"
+                  >
+                </div>
+              </div>
+            </div>
+
+            <!-- Device Pixel Scale Factor Selector -->
+            <div class="flex items-center justify-between pt-1">
+              <span class="text-xs text-md-on-surface-variant">Density (Scale)</span>
+              <div class="flex gap-1 bg-md-surface-container-lowest p-1 rounded-xl border border-md-outline-variant/40">
+                <button type="button" onclick="setScaleFactor(1, this)" class="scale-btn text-xs px-2.5 py-1 rounded-lg text-md-on-surface-variant transition">1x</button>
+                <button type="button" onclick="setScaleFactor(2, this)" class="scale-btn active text-xs px-2.5 py-1 rounded-lg bg-md-secondary-container text-md-on-secondary-container font-bold transition">2x Retina</button>
+                <button type="button" onclick="setScaleFactor(3, this)" class="scale-btn text-xs px-2.5 py-1 rounded-lg text-md-on-surface-variant transition">3x Ultra</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Card: Custom Load Wait Timer -->
+        <section class="bg-md-surface-container-low border border-md-outline-variant/30 rounded-3xl p-5 shadow-sm space-y-4">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-bold uppercase tracking-wider text-md-on-surface-variant flex items-center gap-2">
+              <span class="material-symbols-outlined text-[18px] text-amber-400">timer</span>
+              Execution Delay & Timer
+            </label>
+            <span id="timer-badge" class="text-xs font-mono font-bold text-amber-300 bg-amber-400/10 border border-amber-400/30 px-2.5 py-0.5 rounded-full">0 sec (Instant)</span>
+          </div>
+          
+          <p class="text-xs text-md-on-surface-variant leading-relaxed">
+            Delays capture to allow heavy SPAs, dynamic client charts, WebGL canvases, or deferred cookie banners to settle.
+          </p>
+
+          <div class="flex items-center gap-3">
+            <div class="relative flex-1">
+              <input 
+                type="number" 
+                id="wait-seconds-input" 
+                value="0" 
+                min="0" 
+                max="3600" 
+                oninput="updateDelayBadge(this.value)"
+                class="w-full bg-md-surface-container-lowest border border-md-outline-variant/50 rounded-2xl pl-10 pr-12 py-2.5 text-sm text-md-on-surface font-mono focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
+              >
+              <span class="material-symbols-outlined absolute left-3 top-3 text-md-outline text-[18px]">hourglass_empty</span>
+              <span class="absolute right-3 top-2.5 text-xs text-md-outline font-mono">sec</span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
+            <button type="button" onclick="setTimerSec(0, this)" class="timer-chip active text-xs py-1.5 px-1 rounded-xl bg-amber-400/20 text-amber-300 border border-amber-400 font-bold text-center font-mono transition">0s</button>
+            <button type="button" onclick="setTimerSec(3, this)" class="timer-chip text-xs py-1.5 px-1 rounded-xl bg-md-surface-container hover:bg-md-surface-container-high border border-md-outline-variant/30 text-md-on-surface text-center font-mono transition">3s</button>
+            <button type="button" onclick="setTimerSec(5, this)" class="timer-chip text-xs py-1.5 px-1 rounded-xl bg-md-surface-container hover:bg-md-surface-container-high border border-md-outline-variant/30 text-md-on-surface text-center font-mono transition">5s</button>
+            <button type="button" onclick="setTimerSec(15, this)" class="timer-chip text-xs py-1.5 px-1 rounded-xl bg-md-surface-container hover:bg-md-surface-container-high border border-md-outline-variant/30 text-md-on-surface text-center font-mono transition">15s</button>
+            <button type="button" onclick="setTimerSec(60, this)" class="timer-chip text-xs py-1.5 px-1 rounded-xl bg-md-surface-container hover:bg-md-surface-container-high border border-md-outline-variant/30 text-md-on-surface text-center font-mono transition">60s</button>
+            <button type="button" onclick="setTimerSec(3000, this)" class="timer-chip text-xs py-1.5 px-1 rounded-xl bg-md-surface-container hover:bg-md-surface-container-high border border-md-outline-variant/30 text-md-on-surface text-center font-mono transition">3000s</button>
+          </div>
+        </section>
+
+        <!-- Card: Custom Export Filename -->
+        <section class="bg-md-surface-container-low border border-md-outline-variant/30 rounded-3xl p-5 shadow-sm space-y-4">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-bold uppercase tracking-wider text-md-on-surface-variant flex items-center gap-2">
+              <span class="material-symbols-outlined text-[18px] text-md-primary">badge</span>
+              Custom Export Filename
+            </label>
+            <span class="text-[11px] text-md-on-surface-variant font-mono">.PNG Format</span>
+          </div>
+
+          <div class="relative">
+            <input 
+              type="text" 
+              id="custom-filename" 
+              placeholder="e.g. stripe-homepage-capture" 
+              oninput="updateFilenamePreview()"
+              class="w-full bg-md-surface-container-lowest border border-md-outline-variant/60 rounded-2xl pl-10 pr-4 py-2.5 text-sm text-md-on-surface placeholder:text-md-outline focus:outline-none focus:border-md-primary font-mono"
+            >
+            <span class="material-symbols-outlined absolute left-3 top-3 text-md-outline text-[18px]">edit_note</span>
+          </div>
+
+          <div class="text-[11px] text-md-on-surface-variant flex items-center gap-1.5 overflow-hidden">
+            <span>Result:</span>
+            <span id="filename-preview" class="font-mono text-md-primary truncate bg-md-surface-container px-2 py-0.5 rounded-md">stripe-com-1920x1080.png</span>
+          </div>
+        </section>
+
+        <!-- Action Button -->
+        <button 
+          type="button" 
+          id="btn-capture-now" 
+          onclick="initiateCaptureEngine()" 
+          class="w-full py-4 px-6 rounded-full bg-md-primary hover:bg-md-primary/90 text-md-on-primary font-medium text-sm flex items-center justify-center gap-2.5 shadow-lg transition transform active:scale-[0.99]"
+        >
+          <span class="material-symbols-outlined text-[22px]">play_circle</span>
+          <span>Generate Pure Capture</span>
+        </button>
+
+      </div>
+
+      <!-- Live Viewport, Output Canvas & Metrics (7 Columns) -->
+      <div class="lg:col-span-7 flex flex-col space-y-5">
+        
+        <!-- Live Preview Stage Card -->
+        <div class="bg-md-surface-container-low border border-md-outline-variant/30 rounded-3xl overflow-hidden flex flex-col flex-1 shadow-sm">
+          
+          <!-- Card Header Bar -->
+          <div class="bg-md-surface-container px-5 py-3.5 flex items-center justify-between border-b border-md-outline-variant/20 text-xs">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-md-primary"></span>
+              <span class="font-medium text-md-on-surface" id="stage-viewport-label">1920 × 1080 (16:9)</span>
+              <span id="capture-status-text" class="text-emerald-400 font-mono text-[11px]"></span>
+            </div>
+          </div>
+
+          <!-- Preview Stage Body -->
+          <div class="relative flex-1 min-h-[460px] p-6 flex items-center justify-center bg-md-surface-container-lowest overflow-hidden">
+            
+            <!-- Countdown Overlay -->
+            <div id="countdown-card" class="hidden absolute inset-0 bg-md-surface/95 backdrop-blur-md z-30 flex flex-col items-center justify-center p-6 text-center space-y-4">
+              <div class="w-20 h-20 rounded-full bg-amber-400/10 border-2 border-amber-400/30 flex items-center justify-center text-amber-300 text-3xl animate-pulse">
+                <span class="material-symbols-outlined text-[36px]">hourglass_top</span>
+              </div>
+
+              <div>
+                <p class="text-xs font-mono font-bold tracking-widest text-amber-400 uppercase">Page Settle Wait Timer</p>
+                <div id="timer-clock" class="text-5xl sm:text-6xl font-mono font-extrabold text-md-on-surface tracking-tight mt-1">00:00:00</div>
+                <p class="text-xs text-md-on-surface-variant mt-2 max-w-sm mx-auto">
+                  Allowing client hydration, fonts, media, and delayed dynamic scripts to finish rendering.
+                </p>
+              </div>
+
+              <!-- Linear Progress Bar -->
+              <div class="w-full max-w-xs bg-md-surface-container-highest rounded-full h-2 overflow-hidden border border-md-outline-variant/40">
+                <div id="timer-progress-bar" class="bg-amber-400 h-full w-0 transition-all duration-300"></div>
+              </div>
+
+              <!-- Timer Actions -->
+              <div class="flex items-center gap-3 pt-2">
+                <button type="button" onclick="skipTimer()" class="px-4 py-2 rounded-full bg-md-primary text-md-on-primary text-xs font-semibold flex items-center gap-1.5 hover:bg-md-primary/90 transition shadow">
+                  <span class="material-symbols-outlined text-[16px]">fast_forward</span>
+                  <span>Capture Now</span>
+                </button>
+                <button type="button" onclick="abortTimer()" class="px-4 py-2 rounded-full bg-md-surface-container-high hover:bg-md-surface-container-highest text-md-error text-xs font-semibold border border-md-outline-variant/40 transition">
+                  Cancel
+                </button>
+              </div>
+            </div>
+
+            <!-- Headless Spinner Overlay -->
+            <div id="spinner-card" class="hidden absolute inset-0 bg-md-surface/90 backdrop-blur-sm z-20 flex flex-col items-center justify-center gap-3">
+              <div class="w-12 h-12 border-4 border-md-primary/20 border-t-md-primary rounded-full animate-spin"></div>
+              <p class="text-sm font-medium text-md-on-surface" id="spinner-msg">Rasterizing Headless Viewport...</p>
+              <p class="text-xs text-md-on-surface-variant">Allocating high-DPI byte buffers</p>
+            </div>
+
+            <!-- Dynamic Viewport Outer Container -->
+            <div id="viewport-scalable-wrapper" class="w-full max-w-full flex items-center justify-center">
+              
+              <!-- Placeholder State -->
+              <div id="canvas-placeholder" class="text-center p-8 text-md-outline max-w-sm">
+                <div class="w-16 h-16 rounded-full bg-md-surface-container mx-auto mb-3 flex items-center justify-center text-md-outline">
+                  <span class="material-symbols-outlined text-[32px]">image</span>
+                </div>
+                <p class="text-sm font-medium text-md-on-surface">No Image Rendered Yet</p>
+                <p class="text-xs text-md-on-surface-variant mt-1">Configure your target URL, resolution, and timer delay, then trigger capture.</p>
+              </div>
+
+              <!-- Rendered Screenshot Element -->
+              <div id="img-wrapper" class="hidden w-full max-h-[520px] overflow-auto rounded-xl border border-md-outline-variant/30 shadow-2xl bg-transparency-grid">
+                <img id="rendered-screenshot" class="block w-full h-auto object-contain mx-auto" alt="Pure screenshot" crossorigin="anonymous" />
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- Bottom Action Toolbar -->
+          <div class="bg-md-surface-container px-5 py-4 border-t border-md-outline-variant/20 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+              <button 
+                type="button" 
+                id="btn-download" 
+                onclick="downloadImageFile()" 
+                disabled 
+                class="disabled:opacity-40 disabled:cursor-not-allowed px-5 py-2.5 rounded-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold flex items-center gap-2 transition shadow-md"
+              >
+                <span class="material-symbols-outlined text-[18px]">download</span>
+                <span>Download</span>
+              </button>
+              <button 
+                type="button" 
+                id="btn-copy" 
+                onclick="copyImageBlob()" 
+                disabled 
+                class="disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2.5 rounded-full bg-md-surface-container-high hover:bg-md-surface-container-highest border border-md-outline-variant/40 text-md-on-surface text-xs font-medium flex items-center gap-1.5 transition"
+              >
+                <span class="material-symbols-outlined text-[18px]">content_copy</span>
+                <span>Copy</span>
+              </button>
+            </div>
+
+            <button 
+              type="button" 
+              id="btn-open-tab" 
+              onclick="openInNewTab()" 
+              disabled 
+              class="disabled:opacity-40 disabled:cursor-not-allowed px-3 py-2 rounded-xl text-xs text-md-on-surface-variant hover:text-md-on-surface flex items-center gap-1 transition"
+            >
+              <span class="material-symbols-outlined text-[16px]">open_in_new</span>
+              <span>Open Raw</span>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Comprehensive Metrics Card -->
+        <section class="bg-md-surface-container-low border border-md-outline-variant/30 rounded-3xl p-5 shadow-sm space-y-3">
+          <div class="flex items-center justify-between border-b border-md-outline-variant/20 pb-3">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-[18px] text-md-tertiary">analytics</span>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-md-on-surface-variant">Live Capture Metrics</h3>
+            </div>
+            <span class="text-[11px] text-md-outline font-mono" id="metric-render-timestamp">--:--:--</span>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            
+            <div class="bg-md-surface-container p-3 rounded-2xl border border-md-outline-variant/20">
+              <span class="text-[10px] text-md-on-surface-variant block font-medium uppercase">Output Size</span>
+              <span id="metric-file-size" class="text-sm font-mono font-bold text-md-on-surface">0.0 KB</span>
+            </div>
+
+            <div class="bg-md-surface-container p-3 rounded-2xl border border-md-outline-variant/20">
+              <span class="text-[10px] text-md-on-surface-variant block font-medium uppercase">Dimensions</span>
+              <span id="metric-dimensions" class="text-sm font-mono font-bold text-md-on-surface">-- × --</span>
+            </div>
+
+            <div class="bg-md-surface-container p-3 rounded-2xl border border-md-outline-variant/20">
+              <span class="text-[10px] text-md-on-surface-variant block font-medium uppercase">Aspect Ratio</span>
+              <span id="metric-aspect-ratio" class="text-sm font-mono font-bold text-md-on-surface">-- : --</span>
+            </div>
+
+            <div class="bg-md-surface-container p-3 rounded-2xl border border-md-outline-variant/20">
+              <span class="text-[10px] text-md-on-surface-variant block font-medium uppercase">Scale Factor</span>
+              <span id="metric-scale" class="text-sm font-mono font-bold text-md-primary">2.0x (Retina)</span>
+            </div>
+
+            <div class="bg-md-surface-container p-3 rounded-2xl border border-md-outline-variant/20">
+              <span class="text-[10px] text-md-on-surface-variant block font-medium uppercase">Latency</span>
+              <span id="metric-duration" class="text-sm font-mono font-bold text-emerald-400">0.00 s</span>
+            </div>
+
+            <div class="bg-md-surface-container p-3 rounded-2xl border border-md-outline-variant/20">
+              <span class="text-[10px] text-md-on-surface-variant block font-medium uppercase">Format</span>
+              <span id="metric-format" class="text-sm font-mono font-bold text-md-on-surface">image/png</span>
+            </div>
+
+          </div>
+        </section>
+
+      </div>
+
+    </main>
+
+    <!-- MD3 Snackbars / Toast Notifications -->
+    <div id="snackbar" class="fixed bottom-6 right-6 max-w-sm bg-md-surface-container-highest text-md-on-surface text-xs font-medium px-4 py-3 rounded-2xl shadow-2xl border border-md-outline-variant/40 translate-y-24 opacity-0 transition-all duration-300 z-50 flex items-center gap-3">
+      <span class="material-symbols-outlined text-md-primary text-[20px]" id="snackbar-icon">check_circle</span>
+      <span id="snackbar-message">Operation successful</span>
+    </div>
+
+    <!-- Application JavaScript Engine -->
+    <script>
+      // State Management
+      let selectedWidth = 1920;
+      let selectedHeight = 1080;
+      let isFullPage = false;
+      let isMobileDevice = false;
+      let currentScaleFactor = 2;
+      let capturedBlob = null;
+      let capturedBlobUrl = null;
+
+      // Countdown Timer State
+      let countdownTimerInterval = null;
+      let secondsLeft = 0;
+      let totalWaitSec = 0;
+
+      // Initialize filename preview
+      updateFilenamePreview();
+
+      // Quick Target URL helper
+      function setTargetUrl(url) {
+        document.getElementById('target-url').value = url;
+        updateFilenamePreview();
+      }
+
+      // Presets logic
+      function applyPreset(presetId, width, height, fullPage, element, isMobile = false) {
+        selectedWidth = width;
+        selectedHeight = height;
+        isFullPage = fullPage;
+        isMobileDevice = isMobile;
+
+        // Update active UI chips
+        document.querySelectorAll('.res-preset-btn').forEach(btn => {
+          btn.className = 'res-preset-btn px-2.5 py-2 rounded-2xl text-left border border-md-outline-variant/40 bg-md-surface-container text-md-on-surface hover:bg-md-surface-container-high transition flex flex-col justify-between';
+        });
+        element.className = 'res-preset-btn active px-2.5 py-2 rounded-2xl text-left border border-md-primary bg-md-primary-container text-md-on-primary-container transition flex flex-col justify-between';
+
+        // Synchronize numeric custom inputs
+        document.getElementById('custom-width').value = width;
+        document.getElementById('custom-height').value = fullPage ? 0 : height;
+
+        updateResolutionLabel();
+        updateFilenamePreview();
+      }
+
+      // Handle direct changes in Custom Width/Height inputs
+      function handleCustomDimensionChange(source) {
+        const lockAspect = document.getElementById('lock-aspect').checked;
+        const wInput = document.getElementById('custom-width');
+        const hInput = document.getElementById('custom-height');
+
+        let w = parseInt(wInput.value) || 1280;
+        let h = parseInt(hInput.value) || 720;
+
+        if (lockAspect && selectedWidth > 0 && selectedHeight > 0) {
+          const ratio = selectedWidth / selectedHeight;
+          if (source === 'width') {
+            h = Math.round(w / ratio);
+            hInput.value = h;
+          } else {
+            w = Math.round(h * ratio);
+            wInput.value = w;
+          }
+        }
+
+        selectedWidth = w;
+        selectedHeight = h;
+        isFullPage = false;
+
+        // Deselect preset buttons
+        document.querySelectorAll('.res-preset-btn').forEach(btn => {
+          btn.className = 'res-preset-btn px-2.5 py-2 rounded-2xl text-left border border-md-outline-variant/40 bg-md-surface-container text-md-on-surface hover:bg-md-surface-container-high transition flex flex-col justify-between';
+        });
+
+        updateResolutionLabel();
+        updateFilenamePreview();
+      }
+
+      // Set Device Scale Factor (1x, 2x, 3x)
+      function setScaleFactor(scale, element) {
+        currentScaleFactor = scale;
+        document.querySelectorAll('.scale-btn').forEach(btn => {
+          btn.className = 'scale-btn text-xs px-2.5 py-1 rounded-lg text-md-on-surface-variant transition';
+        });
+        element.className = 'scale-btn active text-xs px-2.5 py-1 rounded-lg bg-md-secondary-container text-md-on-secondary-container font-bold transition';
+        document.getElementById('metric-scale').textContent = `${scale}.0x (${scale === 1 ? 'Standard' : scale === 2 ? 'Retina' : 'Ultra'})`;
+      }
+
+      // Update resolution badge & stage label
+      function updateResolutionLabel() {
+        const badge = document.getElementById('active-res-badge');
+        const stageLabel = document.getElementById('stage-viewport-label');
+        const displayText = isFullPage 
+          ? `${selectedWidth} × Full Height` 
+          : `${selectedWidth} × ${selectedHeight}`;
+        
+        badge.textContent = displayText;
+        stageLabel.textContent = displayText;
+      }
+
+      // Timer & Delay presets
+      function setTimerSec(sec, element) {
+        document.getElementById('wait-seconds-input').value = sec;
+        updateDelayBadge(sec);
+
+        document.querySelectorAll('.timer-chip').forEach(chip => {
+          chip.className = 'timer-chip text-xs py-1.5 px-1 rounded-xl bg-md-surface-container hover:bg-md-surface-container-high border border-md-outline-variant/30 text-md-on-surface text-center font-mono transition';
+        });
+
+        if (element) {
+          element.className = 'timer-chip active text-xs py-1.5 px-1 rounded-xl bg-amber-400/20 text-amber-300 border border-amber-400 font-bold text-center font-mono transition';
+        }
+      }
+
+      function updateDelayBadge(val) {
+        const sec = parseInt(val) || 0;
+        const badge = document.getElementById('timer-badge');
+        if (sec === 0) {
+          badge.textContent = '0 sec (Instant)';
+        } else if (sec >= 60) {
+          const m = Math.floor(sec / 60);
+          const r = sec % 60;
+          badge.textContent = r > 0 ? `${m}m ${r}s wait` : `${m}m wait`;
+        } else {
+          badge.textContent = `${sec} sec wait`;
+        }
+
+        // Dynamically update active chip indicator if the typed value matches a preset
+        document.querySelectorAll('.timer-chip').forEach(chip => {
+          const chipSec = parseInt(chip.textContent) || 0;
+          if (chipSec === sec && String(sec) === String(val).trim()) {
+            chip.className = 'timer-chip active text-xs py-1.5 px-1 rounded-xl bg-amber-400/20 text-amber-300 border border-amber-400 font-bold text-center font-mono transition';
+          } else {
+            chip.className = 'timer-chip text-xs py-1.5 px-1 rounded-xl bg-md-surface-container hover:bg-md-surface-container-high border border-md-outline-variant/30 text-md-on-surface text-center font-mono transition';
+          }
+        });
+      }
+
+      // Dynamic Filename Preview
+      function updateFilenamePreview() {
+        const customInput = document.getElementById('custom-filename').value.trim();
+        const previewEl = document.getElementById('filename-preview');
+        
+        if (customInput) {
+          const sanitized = customInput.replace(/[^a-zA-Z0-9-_]/g, '-').replace(/-+/g, '-');
+          previewEl.textContent = `${sanitized}.png`;
+        } else {
+          let host = 'screensnap';
+          try {
+            const rawUrl = document.getElementById('target-url').value.trim();
+            if (rawUrl) {
+              const u = new URL(rawUrl.startsWith('http') ? rawUrl : 'https://' + rawUrl);
+              host = u.hostname.replace(/\./g, '-');
+            }
+          } catch(e) {}
+          previewEl.textContent = `${host}-${selectedWidth}x${isFullPage ? 'full' : selectedHeight}.png`;
+        }
+      }
+
+      // Format seconds to HH:MM:SS
+      function formatClock(totalSeconds) {
+        const h = Math.floor(totalSeconds / 3600).toString().padStart(2, '0');
+        const m = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0');
+        const s = (totalSeconds % 60).toString().padStart(2, '0');
+        return `${h}:${m}:${s}`;
+      }
+
+      // Orchestrate Execution Pipeline
+      function initiateCaptureEngine() {
+        let inputUrl = document.getElementById('target-url').value.trim();
+        if (!inputUrl) {
+          showSnackbar('Please enter a target webpage URL', 'warning');
+          return;
+        }
+
+        if (!/^https?:\/\//i.test(inputUrl)) {
+          inputUrl = 'https://' + inputUrl;
+          document.getElementById('target-url').value = inputUrl;
+        }
+
+        const waitSec = parseInt(document.getElementById('wait-seconds-input').value) || 0;
+
+        if (waitSec > 0) {
+          totalWaitSec = waitSec;
+          secondsLeft = waitSec;
+
+          document.getElementById('timer-clock').textContent = formatClock(secondsLeft);
+          document.getElementById('timer-progress-bar').style.width = '0%';
+          document.getElementById('countdown-card').classList.remove('hidden');
+
+          const statusEl = document.getElementById('capture-status-text');
+          if (statusEl) statusEl.textContent = `• Delay Active (${waitSec}s)`;
+
+          clearInterval(countdownTimerInterval);
+          countdownTimerInterval = setInterval(() => {
+            secondsLeft--;
+            document.getElementById('timer-clock').textContent = formatClock(secondsLeft);
+            
+            const progress = ((totalWaitSec - secondsLeft) / totalWaitSec) * 100;
+            document.getElementById('timer-progress-bar').style.width = `${progress}%`;
+
+            if (secondsLeft <= 0) {
+              clearInterval(countdownTimerInterval);
+              document.getElementById('countdown-card').classList.add('hidden');
+              executeMicrolinkCapture(inputUrl, waitSec);
+            }
+          }, 1000);
+        } else {
+          executeMicrolinkCapture(inputUrl, 0);
+        }
+      }
+
+      function skipTimer() {
+        clearInterval(countdownTimerInterval);
+        document.getElementById('countdown-card').classList.add('hidden');
+        const inputUrl = document.getElementById('target-url').value.trim();
+        executeMicrolinkCapture(inputUrl, 0);
+      }
+
+      function abortTimer() {
+        clearInterval(countdownTimerInterval);
+        document.getElementById('countdown-card').classList.add('hidden');
+        const statusEl = document.getElementById('capture-status-text');
+        if (statusEl) statusEl.textContent = '';
+        showSnackbar('Capture delay sequence aborted', 'info');
+      }
+
+      // Headless API Capture Execution
+      async function executeMicrolinkCapture(targetUrl, delaySeconds) {
+        const spinner = document.getElementById('spinner-card');
+        const placeholder = document.getElementById('canvas-placeholder');
+        const imgWrapper = document.getElementById('img-wrapper');
+        const imgEl = document.getElementById('rendered-screenshot');
+        const statusText = document.getElementById('capture-status-text');
+
+        spinner.classList.remove('hidden');
+        if (statusText) statusText.textContent = '• Rendering...';
+
+        const startTime = performance.now();
+
+        try {
+          let apiUrl = `https://api.microlink.io?url=${encodeURIComponent(targetUrl)}&screenshot=true&meta=false&viewport.width=${selectedWidth}&viewport.deviceScaleFactor=${currentScaleFactor}`;
+
+          if (isFullPage) {
+            apiUrl += `&screenshot.fullPage=true`;
+          } else if (selectedHeight > 0) {
+            apiUrl += `&viewport.height=${selectedHeight}`;
+          }
+
+          if (isMobileDevice) {
+            apiUrl += `&viewport.isMobile=true&viewport.hasTouch=true`;
+          }
+
+          if (delaySeconds > 0) {
+            const delayMs = Math.min(delaySeconds * 1000, 30000);
+            apiUrl += `&waitForTimeout=${delayMs}`;
+          }
+
+          const response = await fetch(apiUrl);
+          const payload = await response.json();
+
+          if (payload.status === 'success' && payload.data?.screenshot?.url) {
+            const rawScreenshotUrl = payload.data.screenshot.url;
+
+            const imageResponse = await fetch(rawScreenshotUrl);
+            capturedBlob = await imageResponse.blob();
+
+            if (capturedBlobUrl) {
+              URL.revokeObjectURL(capturedBlobUrl);
+            }
+            capturedBlobUrl = URL.createObjectURL(capturedBlob);
+
+            imgEl.src = capturedBlobUrl;
+            imgWrapper.classList.remove('hidden');
+            placeholder.classList.add('hidden');
+
+            const endTime = performance.now();
+            const latencySeconds = ((endTime - startTime) / 1000).toFixed(2);
+            updateMetricsDisplay(capturedBlob, latencySeconds);
+
+            document.getElementById('btn-download').disabled = false;
+            document.getElementById('btn-copy').disabled = false;
+            document.getElementById('btn-open-tab').disabled = false;
+
+            if (statusText) statusText.textContent = '';
+            showSnackbar('Pure screenshot generated successfully!', 'check_circle');
+          } else {
+            throw new Error(payload.message || 'Engine failed to capture the target page');
+          }
+        } catch (err) {
+          console.error(err);
+          if (statusText) statusText.textContent = '• Failed';
+          showSnackbar('Failed to capture target webpage. Check URL.', 'error');
+        } finally {
+          spinner.classList.add('hidden');
+        }
+      }
+
+      function calculateGCD(a, b) {
+        return b === 0 ? a : calculateGCD(b, a % b);
+      }
+
+      // Populate Live Metrics Panel
+      function updateMetricsDisplay(blob, durationSec) {
+        const sizeInKB = (blob.size / 1024).toFixed(1);
+        const sizeFormatted = sizeInKB > 1024 
+          ? `${(sizeInKB / 1024).toFixed(2)} MB` 
+          : `${sizeInKB} KB`;
+        document.getElementById('metric-file-size').textContent = sizeFormatted;
+
+        document.getElementById('metric-duration').textContent = `${durationSec} s`;
+        document.getElementById('metric-format').textContent = blob.type || 'image/png';
+        
+        const now = new Date();
+        document.getElementById('metric-render-timestamp').textContent = now.toTimeString().split(' ')[0];
+
+        const testImg = new Image();
+        testImg.onload = function() {
+          const naturalW = testImg.naturalWidth;
+          const naturalH = testImg.naturalHeight;
+          document.getElementById('metric-dimensions').textContent = `${naturalW} × ${naturalH}`;
+
+          const gcd = calculateGCD(naturalW, naturalH);
+          const ratioW = naturalW / gcd;
+          const ratioH = naturalH / gcd;
+
+          if (ratioW <= 21 && ratioH <= 21) {
+            document.getElementById('metric-aspect-ratio').textContent = `${ratioW}:${ratioH}`;
+          } else {
+            const floatRatio = (naturalW / naturalH).toFixed(2);
+            document.getElementById('metric-aspect-ratio').textContent = `${floatRatio}:1`;
+          }
+        };
+        testImg.src = capturedBlobUrl;
+      }
+
+      // Download Action with Custom Name
+      function downloadImageFile() {
+        if (!capturedBlob) return;
+
+        const downloadLink = document.createElement('a');
+        downloadLink.href = URL.createObjectURL(capturedBlob);
+
+        const customName = document.getElementById('custom-filename').value.trim();
+        let finalFilename;
+
+        if (customName) {
+          const sanitized = customName.replace(/[^a-zA-Z0-9-_]/g, '-').replace(/-+/g, '-');
+          finalFilename = sanitized.endsWith('.png') ? sanitized : `${sanitized}.png`;
+        } else {
+          let host = 'screensnap';
+          try {
+            const rawUrl = document.getElementById('target-url').value.trim();
+            const u = new URL(rawUrl.startsWith('http') ? rawUrl : 'https://' + rawUrl);
+            host = u.hostname.replace(/\./g, '-');
+          } catch(e) {}
+          finalFilename = `${host}-${selectedWidth}x${isFullPage ? 'full' : selectedHeight}.png`;
+        }
+
+        downloadLink.download = finalFilename;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+
+        showSnackbar(`Downloaded: ${finalFilename}`, 'download_done');
+      }
+
+      // Copy pure image to Clipboard
+      async function copyImageBlob() {
+        if (!capturedBlob) return;
+        try {
+          await navigator.clipboard.write([
+            new ClipboardItem({ [capturedBlob.type]: capturedBlob })
+          ]);
+          showSnackbar('Copied pure image to clipboard!', 'content_copy');
+        } catch (err) {
+          console.error(err);
+          showSnackbar('Clipboard API unavailable in this environment', 'warning');
+        }
+      }
+
+      // Open Image in new browser tab
+      function openInNewTab() {
+        if (!capturedBlobUrl) return;
+        window.open(capturedBlobUrl, '_blank');
+      }
+
+      // MD3 Snackbar notification trigger
+      function showSnackbar(message, icon = 'info') {
+        const bar = document.getElementById('snackbar');
+        const msgEl = document.getElementById('snackbar-message');
+        const iconEl = document.getElementById('snackbar-icon');
+
+        msgEl.textContent = message;
+        iconEl.textContent = icon;
+
+        bar.classList.remove('translate-y-24', 'opacity-0');
+        setTimeout(() => {
+          bar.classList.add('translate-y-24', 'opacity-0');
+        }, 3200);
+      }
+
+      // Target URL Enter Key Listener
+      document.getElementById('target-url').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') initiateCaptureEngine();
+      });
+    </script>
+  </body>
+</html>
